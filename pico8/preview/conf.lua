@@ -1,7 +1,7 @@
 function love.conf(t)
-  t.identity = "cairns-p8-preview"
+  t.identity = "sokoban-p8-preview"
   t.version = "11.5"
-  t.window.title = "Cairns (PICO-8 preview)"
+  t.window.title = "Sokoban (PICO-8 preview)"
   t.window.width = 512
   t.window.height = 512
   t.window.resizable = true

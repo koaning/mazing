@@ -14,7 +14,7 @@ check() {
   fi
 }
 
-echo "Checking Cairns requirements:"
+echo "Checking Sokoban requirements:"
 check luajit "make test"
 check zip "make pico8-preview / site"
 check curl "make fetch-lovejs"

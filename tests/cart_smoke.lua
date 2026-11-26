@@ -1,8 +1,8 @@
 -- Cart smoke test: boots pico8/main.lua against stubbed PICO-8 graphics,
 -- input and cartdata, then plays the game through its buttons: start from
--- the title, solve every level with the solver's moves (walking the cursor,
--- picking stones up and sending them), and try undo, restart, the in-game menu
--- (back to levels) and the saved progress along the way.
+-- the title, solve every level with the solver's moves (walking, pushing,
+-- swapping between you and partner), and try undo, restart, bumping into
+-- walls, the in-game menu and the saved progress along the way.
 --
 -- Run from the repo root:  luajit tests/cart_smoke.lua
 
@@ -21,7 +21,7 @@ local function boot(saved)
   local data = saved or {}
 
   for _, name in ipairs({ "cls", "rectfill", "rect", "circfill", "circ", "line", "print", "sfx", "music",
-    "ovalfill", "pset", "fillp", "clip", "pal", "cartdata", "menuitem", "poke" }) do
+    "ovalfill", "pset", "fillp", "clip", "pal", "palt", "spr", "sspr", "cartdata", "menuitem", "poke" }) do
     rawset(env, name, noop)
   end
   rawset(env, "dget", function(i) return data[i] or 0 end)
@@ -46,7 +46,7 @@ local function boot(saved)
   rawset(env, "stop", function(msg) error("cart stop(): " .. tostring(msg)) end)
 
   local src = assert(io.open("pico8/main.lua")):read("*a")
-  src = src .. "\nfunction __peek() return { scene = scene, st = st, cur = cur, held = held, anim = anim,"
+  src = src .. "\nfunction __peek() return { scene = scene, lv = lv, st = st, who = who, anim = anim,"
     .. " intro = intro, outro = outro, won = won, menu = menu, lvl = lvl, moves = #hist } end\n"
   local chunk = assert(loadstring(src, "@pico8/main.lua"))
   setfenv(chunk, env)
@@ -77,27 +77,17 @@ local function boot(saved)
     error("cart never settled")
   end
 
-  function game.walk(tx, ty)
-    for _ = 1, 20 do
-      local cur = game.peek().cur
-      if cur.x == tx and cur.y == ty then return end
-      local b = cur.x < tx and RIGHT or cur.x > tx and LEFT or cur.y < ty and DOWN or UP
-      game.frame({ b })
-    end
-    error("cursor didn't reach " .. tx .. "," .. ty)
-  end
-
-  -- one solver step: put down whatever is held, pick up the piece, send it
-  function game.step(step)
+  -- one solver step { who, dir }: swap to who with O if needed, then press the direction
+  function game.step(step, last)
     local s = game.settle()
-    if s.held then game.frame({ O }) end
-    game.walk(step[1], step[2])
-    game.frame({ O })
-    assert(game.peek().held, "O on a stone should pick it up")
-    local b = step[3] < 0 and LEFT or step[3] > 0 and RIGHT or step[4] < 0 and UP or DOWN
-    game.frame({ b })
-    assert(game.peek().anim, "sending the stone should start its animation")
-    game.settle()
+    if s.who ~= step[1] then
+      game.frame({ O })
+      assert(game.peek().who == step[1], "O should swap to the other one")
+    end
+    local before = game.peek().moves
+    game.frame({ step[2] - 1 })
+    assert(game.peek().moves == before + 1, "the move should count")
+    if not last then game.settle() end
   end
 
   -- a tap of X: pressed for a frame, then let go
@@ -120,7 +110,8 @@ local function boot(saved)
 end
 
 local function solution(env, lvl)
-  local moves, path = solve(env, env.rules_parse(env.levels[lvl][3]))
+  local l = env.levels[lvl]
+  local moves, path = solve(env, env.rules_parse(l[2], l[3]))
   return path, moves
 end
 
@@ -141,15 +132,19 @@ assert(game.peek().scene == "play", "enter on the title should start level 1")
 local s = game.settle()
 assert(s.lvl == 1 and s.moves == 0)
 
+-- bumping into a wall isn't a move (level 1: the wall is right above you)
+game.frame({ UP })
+s = game.settle()
+assert(s.moves == 0, "walking into a wall shouldn't count")
+
 -- undo: one move, then a tap of X takes it back
 local path = solution(env, 1)
 game.step(path[1])
 assert(game.peek().moves == 1, "a move should count")
 game.tap_x()
-s = game.peek()
-assert(s.moves == 0, "X should undo the move")
+assert(game.peek().moves == 0, "X should undo the move")
 
--- restart: hold X, or press R (scancode 21)
+-- restart: hold X, press R (scancode 21), or pick it in the menu
 game.step(path[1])
 for _ = 1, 25 do game.frame({}, { X }) end
 game.frame()
@@ -159,18 +154,9 @@ game.step(path[1])
 game.frame({}, {}, { 21 })
 game.frame()
 assert(game.peek().moves == 0, "R should restart the level")
-
--- picking up and putting down, with O and with enter
-game.walk(path[1][1], path[1][2])
-game.frame({ O })
-assert(game.peek().held, "O should pick up a stone")
-game.frame({ O })
-assert(not game.peek().held, "O again should put it down")
-game.frame({ PAUSE }, { PAUSE }, { ENTER })
-assert(game.peek().held and not game.peek().menu, "enter should pick up a stone, not open the menu")
-game.frame({}, { PAUSE }, { ENTER })
-game.frame({ O })
-assert(not game.peek().held)
+game.step(path[1])
+game.menu(2)
+assert(game.peek().moves == 0, "restart in the menu should restart the level")
 
 -- the pause button (p / start) opens the menu, and closes it again
 game.frame({ PAUSE })
@@ -179,30 +165,38 @@ game.frame()
 game.frame({ PAUSE })
 assert(not game.peek().menu, "the pause button should close the menu")
 
--- solve every level with the fewest moves, through the buttons
-local played = 0
+-- O does nothing with one guy
+game.frame({ O })
+assert(game.peek().who == 1)
+
+-- solve every level with the solver's moves, through the buttons
+local played, swapped = 0, false
 for lvl = 1, #env.levels do
   s = game.settle()
   assert(s.scene == "play" and s.lvl == lvl, "expected to be playing level " .. lvl .. ", got " .. tostring(s.lvl))
-  local steps, best = solution(env, lvl)
-  for _, step in ipairs(steps) do game.step(step) end
+  local steps, n = solution(env, lvl)
+  for k, step in ipairs(steps) do
+    if step[1] == 2 then swapped = true end
+    game.step(step, k == #steps)
+  end
+  -- the last move: once it's done, the level is solved and the next one starts on its own
+  while game.peek().anim do game.frame() end
   s = game.peek()
-  assert(s.won, "level " .. lvl .. " should be solved")
-  assert(s.moves == best, "level " .. lvl .. " moves")
-  assert(game.data[lvl] == best, "level " .. lvl .. " fewest moves should be saved")
+  assert(s.won and s.outro, "level " .. lvl .. " should be solved, and move on")
+  assert(s.moves == n, "level " .. lvl .. ": every move should count")
+  assert(game.data[lvl] == 1, "level " .. lvl .. " should be saved as solved")
   assert(game.data[0] == lvl, "level " .. lvl .. " should unlock the next")
-  for _ = 1, 30 do game.frame() end
-  game.frame({ O })
-  for _ = 1, 60 do game.frame() end
+  game.settle()
   played = played + 1
 end
+assert(swapped, "some level should need partner")
 assert(game.peek().scene == "title", "after the last level the game goes back to the title")
 
--- the menu's level select goes back to the title too
+-- the menu's back to levels goes to the title too
 game.frame({ O })
 assert(game.peek().scene == "play")
 game.settle()
-game.menu(2)
+game.menu(3)
 assert(game.peek().scene == "title", "back to levels should go to the title")
 
 -- saved progress survives a reboot: start on the last level played
@@ -211,4 +205,4 @@ assert(again.peek().lvl == game.data[63], "the title should open on the last lev
 again.frame({ O })
 assert(again.peek().scene == "play", "a solved level can be played again")
 
-print("Cart smoke: " .. played .. " levels solved through the buttons, undo, menu and saves work.")
+print("Cart smoke: " .. played .. " levels solved through the buttons, undo, restart, swap, menu and saves work.")
