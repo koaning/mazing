@@ -153,11 +153,11 @@ local function solved()
   dset(lvl, 1)
 end
 
-local function splash(i)
-  for k = 1, 10 do
+local function splash(i, c)
+  for k = 1, c and 6 or 10 do
     add(bits, {
       x = sx_of(i) + 4, y = sy_of(i) + 4, vx = rnd(1.6) - 0.8, vy = -0.6 - rnd(1),
-      c = k % 2 == 0 and 7 or 12, t = 14 + rnd(10),
+      c = k % 2 == 0 and 7 or (c or 12), t = 14 + rnd(10),
     })
   end
 end
@@ -206,6 +206,7 @@ local function land()
     splash(m.rto)
     sfx(3)
   end
+  if m.crate and lv.goal[m.cto] then splash(m.cto, 10) end
   if a.click then sfx(4) end
   if a.door then sfx(5) end
   if rules_won(lv, st) then solved() end
@@ -438,7 +439,10 @@ local function draw_board()
       end
       if c == "_" then spr(press and 38 or 37, sx, sy) end
       if lv.green[i] then spr(rules_shut(lv, st, i, press) and 39 or 40, sx, sy) end
-      if lv.goal[i] then spr(32, sx, sy) end
+      if lv.goal[i] then
+        spr(32, sx, sy)
+        if flr(frame / 25) % 2 == 1 then pset(sx + 3, sy + 3, 10) end
+      end
     end
   end
 end
@@ -596,8 +600,8 @@ local function draw_title()
     print(s, cx + 6 - #s * 2, cy + 6, open and 4 or 7)
     if dget(i) > 0 then
       -- a little crate on a goal: solved
-      rectfill(cx + 1, cy + 1, cx + 3, cy + 3, 9)
-      pset(cx + 2, cy + 2, 8)
+      rectfill(cx + 1, cy + 1, cx + 3, cy + 3, 4)
+      pset(cx + 2, cy + 2, 10)
     end
   end
 
