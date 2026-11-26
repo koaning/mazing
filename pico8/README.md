@@ -12,7 +12,7 @@ The cart is `mazing.p8`, which `#include`s:
 
 | File | What |
 | --- | --- |
-| `levels.lua` | the 27 puzzles: name, board, goal |
+| `levels.lua` | the 30 puzzles: name, board, goal |
 | `rules.lua` | reading a board, walking and pushing, water, rocks, switches, the way out (ported from koaning/sokoban's `js/sokoban.js` and `js/goals.js`) |
 | `main.lua` | title + level select, the level drawn from the sprite sheet, animations, undo, swapping, menu, keys, saves, sfx |
 
@@ -29,7 +29,7 @@ export a standalone `.p8.png`/HTML, load the cart in PICO-8 and `save` /
 
 ## Controls
 
-- Title: ⬅️➡️⬆️⬇️ pick a level, 🅾️ play. Levels open one by one as you solve them.
+- Title: ⬅️➡️⬆️⬇️ pick a level, 🅾️ play. Three unsolved levels are always open to pick from; solving any level unlocks the next.
 - Game: ⬅️➡️⬆️⬇️ walk, and push whatever is in the way. Hold a direction to
   keep walking.
 - 🅾️ swaps between you and partner on levels with two of you. The one you
@@ -51,7 +51,7 @@ export a standalone `.p8.png`/HTML, load the cart in PICO-8 and `save` /
 One string per board, rows split by `|`, the first row at the top:
 
 ```lua
-{ "first push", "##>####|#@ $ .#|#######" },
+{ "first push", "###>####|##  .  #|#@$ $  #|#  # . #|#      #|########" },
 { "counterweight", "#########|#   g  _#|# $ #   #|#@  ##G##|######>#", "exit" },
 ```
 
@@ -77,7 +77,7 @@ board here.
 ## Saved progress
 
 `cartdata("koaning_mazing")`: `dget(0)` is the highest level solved,
-`dget(1..27)` is 1 once that level is solved, `dget(63)` the level played
+`dget(1..30)` is 1 once that level is solved, `dget(63)` the level played
 last (the title opens on it).
 
 ## Sound

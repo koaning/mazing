@@ -206,7 +206,7 @@ function tests.an_island_without_crates_has_its_way_out_open(env)
 end
 
 function tests.every_level_is_well_formed(env)
-  assert_eq(#env.levels, 27)
+  assert_eq(#env.levels, 30)
   for i, l in ipairs(env.levels) do
     local name = "level " .. i .. " (" .. l[1] .. ")"
     local lv, s = env.rules_parse(l[2], l[3]), nil
