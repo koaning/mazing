@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
--- cairns
+-- mazing
 -- by koaning - roll stones, plant flags
 #include levels.lua
 #include rules.lua

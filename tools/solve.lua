@@ -1,4 +1,4 @@
--- Breadth-first solver for Cairns levels, on top of the cart's own rules
+-- Breadth-first solver for Mazing levels, on top of the cart's own rules
 -- (pico8/rules.lua loaded through tools/pico8_env.lua). Used by
 -- tests/test_rules.lua to check every level's fewest moves and by
 -- tests/cart_smoke.lua to play levels through the cart.

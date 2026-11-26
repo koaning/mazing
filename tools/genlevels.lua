@@ -1,4 +1,4 @@
--- Finds new Cairns levels: random 7x5 boards, solved with the same
+-- Finds new Mazing levels: random 7x5 boards, solved with the same
 -- breadth-first search the tests use (tools/solve.lua on the cart's rules).
 -- Prints candidates as levels.lua lines, sorted by fewest moves, to pick
 -- from by hand (and give a name).

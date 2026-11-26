@@ -14,7 +14,7 @@ local ox, oy = 8, 28
 -- saved progress:
 -- dget(0) highest level solved, dget(i) your fewest moves on level i
 -- (0 = not solved yet), dget(63) the level played last
-cartdata("koaning_cairns")
+cartdata("koaning_mazing")
 
 -- how high a piece sits in a stack: on the big stone, on the small one
 local lift = { l = 0, m = 8, h = 15 }

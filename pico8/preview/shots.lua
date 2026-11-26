@@ -1,4 +1,4 @@
--- Scripted run for `love cairns-p8.love --shots <dir> [--label <file>] [--all]`
+-- Scripted run for `love mazing-p8.love --shots <dir> [--label <file>] [--all]`
 -- (`make screenshots`). It presses the buttons for a player and saves:
 --
 --   pico8-cart.png    the title screen as a cartridge: the cart label with
