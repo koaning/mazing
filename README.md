@@ -2,7 +2,7 @@
 
 A crate-pushing puzzle for **PICO-8** (128×128, 16 colours): push every crate
 onto a goal, then walk out through the way out. It's a port of
-[koaning/sokoban](https://github.com/koaning/sokoban): its 27 levels, its
+[koaning/sokoban](https://github.com/koaning/sokoban): its levels (expanded to 30), its
 rules (water, rocks, green switches, and a partner to work with), and its
 8×8 "sandstone" look.
 

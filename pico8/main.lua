@@ -83,7 +83,11 @@ local xhold, frame = 0, 0
 local bits = {}
 
 local function unlocked()
-  return min(dget(0) + 1, #levels)
+  local n = 0
+  for i = 1, #levels do
+    if dget(i) > 0 then n = n + 1 end
+  end
+  return min(n + 3, #levels)
 end
 
 -- a square's top left on the screen
@@ -603,7 +607,7 @@ local function draw_title()
     cprint(levels[lvl][1], 111, 7)
     cprint("\142 play", 119, 10)
   else
-    cprint("solve " .. (lvl - 1) .. " to open it", 115, 15)
+    cprint("solve " .. (lvl - n) .. " more to open", 115, 15)
   end
 end
 

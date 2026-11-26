@@ -119,12 +119,46 @@ local game = boot()
 local env = game.env
 assert(game.peek().scene == "title", "the cart should boot into the title")
 
--- a locked level can't be started
+-- three levels are open on a fresh save, level 4 is locked
 game.frame({ RIGHT })
-assert(game.peek().lvl == 2)
+game.frame({ RIGHT })
+assert(game.peek().lvl == 3)
 game.frame({ O })
-assert(game.peek().scene == "title", "level 2 is locked on a fresh save")
+assert(game.peek().scene == "play" and game.peek().lvl == 3, "level 3 is open on a fresh save")
+game.settle()
+game.menu(3)
+assert(game.peek().scene == "title")
+game.frame({ RIGHT })
+assert(game.peek().lvl == 4)
+game.frame({ O })
+assert(game.peek().scene == "title", "level 4 is locked on a fresh save")
 game.frame({ LEFT })
+game.frame({ LEFT })
+game.frame({ LEFT })
+assert(game.peek().lvl == 1)
+
+-- solving any open level unlocks the next so three unsolved stay open
+local skip = boot()
+skip.frame({ RIGHT })
+skip.frame({ O })
+assert(skip.peek().scene == "play" and skip.peek().lvl == 2)
+local p2 = solution(skip.env, 2)
+for k, st in ipairs(p2) do skip.step(st, k == #p2) end
+while skip.peek().anim do skip.frame() end
+skip.settle()
+skip.menu(3)
+assert(skip.peek().scene == "title")
+-- cursor is on level 3; level 4 is now open, level 5 is still locked
+skip.frame({ RIGHT })
+assert(skip.peek().lvl == 4)
+skip.frame({ O })
+assert(skip.peek().scene == "play" and skip.peek().lvl == 4, "solving level 2 unlocks level 4")
+skip.settle()
+skip.menu(3)
+skip.frame({ RIGHT })
+assert(skip.peek().lvl == 5)
+skip.frame({ O })
+assert(skip.peek().scene == "title", "level 5 stays locked with only 1 solved")
 
 -- enter is pico-8's pause button too: with the enter key down it selects
 game.frame({ PAUSE }, { PAUSE }, { ENTER })
