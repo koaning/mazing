@@ -82,7 +82,7 @@ last (the title opens on it).
 
 ## Sound
 
-`tools/music.lua` holds everything you hear and compiles it into the cart:
+`tools/scores.lua` holds everything you hear and `tools/sfx.lua` compiles it into the cart:
 
 - sfx 0-9, the sound effects, written as short note strings and kept soft:
   a barely-there footstep, a crate scraping, a splash, a rock sinking, a

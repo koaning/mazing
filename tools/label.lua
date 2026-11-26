@@ -2,10 +2,11 @@
 -- player's `--label`) into the cart's __label__ section, which PICO-8 needs
 -- for `export` and shows on the cartridge.
 --
--- Usage (repo root):  luajit tools/label.lua dist/label.txt [pico8/mazing.p8]
+-- Usage (repo root):  luajit tools/label.lua dist/label.txt [pico8/<game>.p8]
 
 local label_path = assert(arg[1], "usage: luajit tools/label.lua <label.txt> [cart.p8]")
-local cart = arg[2] or "pico8/mazing.p8"
+package.path = "tools/?.lua;" .. package.path
+local cart = arg[2] or require("cart")()
 
 local function read(path)
   local f = assert(io.open(path, "rb"), "cannot open " .. path)

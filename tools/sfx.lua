@@ -1,79 +1,51 @@
--- Mazing sound: readable scores compiled into the cart's __sfx__ and
--- __music__ sections.
+-- Sound compiler: the readable scores in tools/scores.lua (game-owned)
+-- compiled into the cart's __sfx__ and __music__ sections.
 --
---   luajit tools/music.lua              rewrite pico8/mazing.p8
---   luajit tools/music.lua --check      fail if the cart is out of date
+--   luajit tools/sfx.lua [cart.p8]            rewrite the cart (`make music`)
+--   luajit tools/sfx.lua [cart.p8] --check    fail if the cart is out of date
 --
--- sfx 0-9 are the sound effects (the `effects` table below), sfx 10+ the
--- background music: one calm, original chord loop (open maj7 voicings,
--- sus4 lifts), "high moor" in G major, music(0), played on the title
--- screen and in game alike.
--- No lead melody: a soft plucked sine harp arpeggio on channel 0 and a
--- root/fifth triangle bass on channel 1. Channels 2-3 stay free for sfx.
+-- tools/scores.lua returns a table:
+--
+--   first_sfx  sfx 0..first_sfx-1 are sound effects, music uses first_sfx+
+--   effects    list of { name, speed, notes } compiled into sfx 0, 1, ...;
+--              leave it out to keep the cart's own sfx 0..first_sfx-1 (made
+--              in PICO-8's editor) untouched
+--   songs      list of { name, title, speed, patterns, order }; each loops
+--              on itself, and the check makes sure pico8/main.lua calls
+--              music(<first pattern>, ...) for every song
+--   harp, bass optional voices for the song arranger: { wave, vol }
+--
+-- Effect notes are "pitch:wave:volume:effect" tokens, "-" for a rest, up to
+-- 32 per effect. Pitches are PICO-8 tracker notes (c0 is the lowest; c#2,
+-- a3, ...). Waves: 0 sine, 1 triangle, 2 saw, 3 square, 4 pulse, 5 organ,
+-- 6 noise, 7 phaser. Effects: 0 none, 1 slide, 2 vibrato, 3 drop, 4 fade in,
+-- 5 fade out.
+--
+-- Song patterns are four bars of chords: one per bar ("gmaj7"), or two
+-- sharing a bar ("dsus4/d7"). Chord qualities: maj7 m7 7 6 m6 sus4 maj. Each
+-- pattern becomes a plucked harp arpeggio (channel 0) and a root/fifth bass
+-- (channel 1); channels 2-3 stay free for sound effects.
 
-local CART = "pico8/mazing.p8"
-local FIRST_SFX = 10
+package.path = "tools/?.lua;" .. package.path
 
-local HARP = { wave = 0, vol = 3 }
-local BASS = { wave = 1, vol = 4 }
+local args = {}
+local check = false
+for _, a in ipairs(arg) do
+  if a == "--check" then check = true else args[#args + 1] = a end
+end
+local CART = args[1] or require("cart")()
+local scores = dofile("tools/scores.lua")
+local FIRST_SFX = assert(scores.first_sfx, "tools/scores.lua: first_sfx is missing")
+local effects = scores.effects
+local songs = scores.songs or {}
 
--------------------------------------------------------------------------------
--- score
--------------------------------------------------------------------------------
--- Four bars per pattern. Chords: one per bar, or two "a/b" sharing the bar.
+local HARP = scores.harp or { wave = 0, vol = 3 }
+local BASS = scores.bass or { wave = 1, vol = 4 }
+
 local chord_tones = {
   maj7 = { 0, 4, 7, 11 }, m7 = { 0, 3, 7, 10 }, ["7"] = { 0, 4, 7, 10 },
   ["6"] = { 0, 4, 7, 9 }, m6 = { 0, 3, 7, 9 }, sus4 = { 0, 5, 7, 12 },
   maj = { 0, 4, 7, 12 },
-}
-
--------------------------------------------------------------------------------
--- sound effects, sfx 0-9
--------------------------------------------------------------------------------
--- One string of notes per effect: "pitch:wave:volume:effect", "-" for a rest.
--- Pitches are PICO-8 tracker notes (c0 is the lowest). Waves: 0 sine,
--- 1 triangle, 2 saw, 3 square, 4 pulse, 5 organ, 6 noise, 7 phaser.
--- Effects: 0 none, 1 slide, 2 vibrato, 3 drop, 4 fade in, 5 fade out.
--- Kept soft and low: a footstep is barely there, crates scrape, water
--- splashes, and the way out opening rings a little bell.
-local effects = {
-  -- a soft low footstep
-  { name = "step", speed = 2, notes = "d1:1:1:5" },
-  -- a crate or rock scraping over sandstone
-  { name = "push", speed = 3, notes = "c0:6:2:0 c0:6:2:0 c0:6:1:5" },
-  -- a crate landing in water
-  { name = "splash", speed = 3, notes = "c3:6:3:0 a2:6:2:3 f2:6:1:5" },
-  -- a rock sinking: a low plop and bubbles
-  { name = "sink", speed = 3, notes = "e2:0:3:3 c1:0:3:3 c1:6:1:5" },
-  -- a switch clicking down or up, and the green walls flipping
-  { name = "switch", speed = 2, notes = "c3:1:2:0 g2:1:2:3 g2:1:1:5" },
-  -- the way out opens: a small bell on an open fifth
-  { name = "door", speed = 6, notes = "g3:0:3:0 d4:0:2:0 d4:0:2:2 d4:0:1:5" },
-  -- a soft downward glide
-  { name = "undo", speed = 3, notes = "e3:0:2:0 b2:0:2:1 b2:0:1:5" },
-  -- a slow, quiet G major 9 arpeggio, in the key of the song
-  { name = "solved", speed = 10,
-    notes = "g2:0:3:0 d3:0:3:0 a3:0:3:0 b3:0:3:0 f#4:0:2:0 f#4:0:2:2 f#4:0:1:2 f#4:0:1:5" },
-  -- a muted thud when he can't go that way
-  { name = "bump", speed = 5, notes = "a0:1:3:3 a0:1:1:5" },
-  -- a quiet sine lift: playing the other one
-  { name = "swap", speed = 2, notes = "a2:0:2:0 e3:0:3:0 e3:0:2:5" },
-}
-
--------------------------------------------------------------------------------
--- music, sfx 10+
--------------------------------------------------------------------------------
-local songs = {
-  {
-    name = "song", title = "high moor", speed = 50,
-    patterns = {
-      a = { "gmaj7", "em7", "cmaj7", "dsus4/d7" },
-      a2 = { "gmaj7", "bm7", "cmaj7", "am7/d7" },
-      b = { "em7", "cmaj7", "am7", "dsus4/d7" },
-      coda = { "gmaj7", "cmaj7", "am7/d7", "gmaj" },
-    },
-    order = { "a", "a2", "b", "coda" },
-  },
 }
 
 -------------------------------------------------------------------------------
@@ -83,6 +55,7 @@ local semis = { c = 0, d = 2, e = 4, f = 5, g = 7, a = 9, b = 11 }
 
 local function parse_chord(c)
   local root, acc, q = c:match("^(%a)(#?)(.*)$")
+  assert(root and semis[root], "bad chord " .. c)
   return semis[root] + (acc == "#" and 1 or 0), assert(chord_tones[q], "bad chord " .. c)
 end
 
@@ -140,7 +113,7 @@ local function compile_effect(e)
     assert(i <= 32, e.name .. " has more than 32 notes")
     if tok ~= "-" then
       local name, acc, oct, w, v, fx = tok:match("^(%a)(#?)(%d):(%d):(%d):(%d)$")
-      assert(name, "bad note " .. tok .. " in " .. e.name)
+      assert(name and semis[name], "bad note " .. tok .. " in " .. e.name)
       local pitch = semis[name] + (acc == "#" and 1 or 0) + 12 * tonumber(oct)
       assert(pitch <= 63, "note too high in " .. e.name)
       notes[i] = { pitch = pitch, wave = tonumber(w), vol = tonumber(v), fx = tonumber(fx) }
@@ -190,10 +163,16 @@ end
 -- cart i/o
 -------------------------------------------------------------------------------
 local function read(path)
-  local f = assert(io.open(path, "rb"))
+  local f = assert(io.open(path, "rb"), "cannot open " .. path)
   local s = f:read("*a")
   f:close()
   return s
+end
+
+local function lines(s)
+  local t = {}
+  for l in (s or ""):gmatch("[^\n]+") do t[#t + 1] = l end
+  return t
 end
 
 local function split_sections(src)
@@ -216,19 +195,31 @@ end
 
 local function updated_cart(src, sfx, music)
   local head, sections, order = split_sections(src)
-  local out = {}
-  assert(#effects <= FIRST_SFX, "too many sound effects")
+  local old = lines(sections.sfx)
   local empty = "00010000" .. string.rep("00000", 32)
-  for i = 1, FIRST_SFX do
-    local e = effects[i]
-    out[i] = e and sfx_line(compile_effect(e), e.speed) or empty
+  local out = {}
+  if effects then
+    assert(#effects <= FIRST_SFX, "more sound effects than first_sfx slots")
+    for i = 1, FIRST_SFX do
+      local e = effects[i]
+      out[i] = e and sfx_line(compile_effect(e), e.speed) or empty
+    end
+  else
+    for i = 1, FIRST_SFX do out[i] = old[i] or empty end
   end
   for i, l in ipairs(sfx) do out[FIRST_SFX + i] = l end
+  local function ensure(name)
+    for _, n in ipairs(order) do
+      if n == name then return end
+    end
+    order[#order + 1] = name
+  end
   sections.sfx = table.concat(out, "\n")
-  sections.music = table.concat(music, "\n")
-  local has_music = false
-  for _, n in ipairs(order) do has_music = has_music or n == "music" end
-  if not has_music then order[#order + 1] = "music" end
+  ensure("sfx")
+  if #music > 0 then
+    sections.music = table.concat(music, "\n")
+    ensure("music")
+  end
   local parts = { head }
   for _, n in ipairs(order) do
     parts[#parts + 1] = "__" .. n .. "__\n" .. sections[n] .. "\n"
@@ -240,18 +231,22 @@ local sfx, music, starts = build(songs)
 local src = read(CART)
 local new = updated_cart(src, sfx, music)
 
-if arg[1] == "--check" then
+if check then
   if new ~= src then
-    io.stderr:write("pico8/mazing.p8 sound is stale: run `make music`\n")
+    io.stderr:write(CART .. " sound is stale: run `make music`\n")
     os.exit(1)
   end
   local main = read("pico8/main.lua")
-  if not main:find("music%(" .. starts.song .. ",") then
-    io.stderr:write("pico8/main.lua should call music(" .. starts.song .. ", ...) for the song\n")
-    os.exit(1)
+  for _, song in ipairs(songs) do
+    local n = starts[song.name]
+    if not main:find("music%(" .. n .. "[,%)]") then
+      io.stderr:write("pico8/main.lua should call music(" .. n .. ", ...) for the song "
+        .. song.name .. "\n")
+      os.exit(1)
+    end
   end
-  print(string.format("music  %d patterns, sfx %d-%d, up to date",
-    #music, FIRST_SFX, FIRST_SFX + #sfx - 1))
+  print(string.format("sound  %d effects, %d songs, %d music patterns, up to date",
+    effects and #effects or 0, #songs, #music))
 else
   if new ~= src then
     local f = assert(io.open(CART, "wb"))
@@ -259,5 +254,7 @@ else
     f:close()
     print("updated " .. CART)
   end
-  print("the song starts at pattern " .. starts.song)
+  for _, song in ipairs(songs) do
+    print(string.format("%-10s starts at music pattern %d", song.name, starts[song.name]))
+  end
 end
