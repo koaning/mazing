@@ -23,10 +23,11 @@ assert(#rows == 128, "label must have 128 rows, got " .. #rows)
 local label = "__label__\n" .. table.concat(rows, "\n") .. "\n"
 
 local src = read(cart)
--- drop an old label, then put the new one right after the code, where
--- PICO-8 keeps it
+-- drop an old label, then put the new one right after the code and the
+-- sprites, where PICO-8 keeps it
 src = src:gsub("__label__\n[^_]*", "")
 local code = assert(src:find("__lua__\n", 1, true), "cart has no __lua__ section")
+code = src:find("__gfx__\n", code, true) or code
 local at = src:find("\n__%w+__\n", code)
 local out = at and src:sub(1, at) .. label .. src:sub(at + 1) or src .. label
 

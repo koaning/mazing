@@ -4,13 +4,13 @@
 --   pico8-cart.png    the title screen as a cartridge: the cart label with
 --                     the cart's title and byline, like PICO-8 shows carts
 --   pico8-title.png   the title screen with some levels solved
---   pico8.png         level 9 with one cairn built and a stone picked up
---   with --all also:  pico8-solved.png, pico8-menu.png, pico8-hit.png (a
---                     stone that just stopped against something)
+--   pico8.png         level 21 (ferry) part way: a rock sunk, a crate across
+--   with --all also:  pico8-two.png (level 22, you and partner),
+--                     pico8-menu.png
 --   with --label:     the title screen as __label__ text (tools/label.lua)
 --
 -- The moves come from tools/solve.lua (copied into the .love), run on the
--- cart's own rules. The cart's locals (cursor, state, ...) are read through
+-- cart's own rules. The cart's locals (state, who, ...) are read through
 -- the upvalues of _update60, so the cart needs no test hooks.
 
 local solve = require("solve")
@@ -18,8 +18,9 @@ local solve = require("solve")
 local shots = {}
 shots.__index = shots
 
--- levels 1-8 solved, on level 9
-local SAVE = { [0] = 8, 2, 4, 6, 7, 7, 8, 9, 10, [63] = 9 }
+-- levels 1-20 solved, on level 21
+local SAVE = { [0] = 20, [63] = 21 }
+for i = 1, 20 do SAVE[i] = 1 end
 
 -- finds a local of the cart by name among the upvalues of its callbacks
 local function peek(env, name)
@@ -46,7 +47,7 @@ function shots.new(dir, all, capture, label, cartridge)
 end
 
 function shots:start(env)
-  local LEFT, RIGHT, UP, DOWN, O, X = 0, 1, 2, 3, 4, 5
+  local O = 4
   local self_ = self
 
   local function frame(buttons, n)
@@ -68,69 +69,48 @@ function shots:start(env)
     end
   end
 
-  local function walk(tx, ty)
-    for _ = 1, 20 do
-      local cur = peek(env, "cur")
-      if cur.x == tx and cur.y == ty then return end
-      frame({ cur.x < tx and RIGHT or cur.x > tx and LEFT or cur.y < ty and DOWN or UP })
-      frame()
+  -- plays the solver's moves from..to of level n
+  local function play(path, from, to)
+    for i = from, to do
+      local s = path[i]
+      settle()
+      if peek(env, "who") ~= s[1] then frame({ O }) end
+      frame({ s[2] - 1 })
+      settle()
     end
   end
 
-  local function pick_up(step)
-    settle()
-    if peek(env, "held") then frame({ O }); frame() end
-    walk(step[1], step[2])
-    frame({ O })
-    frame()
+  local function path_of(n)
+    local _, path = solve(env, env.rules_parse(env.levels[n][2], env.levels[n][3]))
+    return path
   end
 
   self.co = coroutine.create(function()
-    frame(nil, 50)
+    frame(nil, 70)
     shot("pico8-title.png")
     self_.cartridge(self_.dir .. "/pico8-cart.png")
     if self_.label then self_.label() end
 
     frame({ O })
     settle()
-    local _, path = solve(env, env.rules_parse(env.levels[9][3]))
-    local i = 1
-    while env.rules_cairns(peek(env, "st")) < 1 do
-      pick_up(path[i])
-      local s = path[i]
-      frame({ s[3] < 0 and LEFT or s[3] > 0 and RIGHT or s[4] < 0 and UP or DOWN })
-      settle()
-      i = i + 1
-    end
-    pick_up(path[i])
-    frame(nil, 70)
+    local path = path_of(21)
+    play(path, 1, 15)
+    frame(nil, 20)
     shot("pico8.png")
 
     if self_.all then
-      frame({ O })
       frame({ 6 })
       frame(nil, 10)
-      frame({ DOWN })
-      frame(nil, 10)
       shot("pico8-menu.png")
-      frame({ UP })
-      frame({ O })
+      frame({ 6 })
       frame(nil, 5)
-      local hit_shot = false
-      while i <= #path do
-        pick_up(path[i])
-        local s = path[i]
-        frame({ s[3] < 0 and LEFT or s[3] > 0 and RIGHT or s[4] < 0 and UP or DOWN })
-        settle()
-        if not hit_shot and peek(env, "hit") then
-          frame(nil, 3)
-          shot("pico8-hit.png")
-          hit_shot = true
-        end
-        i = i + 1
-      end
-      frame(nil, 40)
-      shot("pico8-solved.png")
+      -- solving it goes on to level 22 by itself
+      play(path, 16, #path)
+      settle()
+      local two = path_of(22)
+      play(two, 1, 12)
+      frame(nil, 20)
+      shot("pico8-two.png")
     end
   end)
 end

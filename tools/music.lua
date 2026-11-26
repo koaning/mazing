@@ -4,15 +4,15 @@
 --   luajit tools/music.lua              rewrite pico8/mazing.p8
 --   luajit tools/music.lua --check      fail if the cart is out of date
 --
--- sfx 0-7 are the sound effects (the `effects` table below), sfx 8+ the
--- background music: one calm, original chord loop for an island in the
--- wind (open maj7 voicings, sus4 lifts), "high moor" in G major, music(0),
--- played on the title screen and in game alike.
+-- sfx 0-9 are the sound effects (the `effects` table below), sfx 10+ the
+-- background music: one calm, original chord loop (open maj7 voicings,
+-- sus4 lifts), "high moor" in G major, music(0), played on the title
+-- screen and in game alike.
 -- No lead melody: a soft plucked sine harp arpeggio on channel 0 and a
 -- root/fifth triangle bass on channel 1. Channels 2-3 stay free for sfx.
 
 local CART = "pico8/mazing.p8"
-local FIRST_SFX = 8
+local FIRST_SFX = 10
 
 local HARP = { wave = 0, vol = 3 }
 local BASS = { wave = 1, vol = 4 }
@@ -28,35 +28,40 @@ local chord_tones = {
 }
 
 -------------------------------------------------------------------------------
--- sound effects, sfx 0-7
+-- sound effects, sfx 0-9
 -------------------------------------------------------------------------------
 -- One string of notes per effect: "pitch:wave:volume:effect", "-" for a rest.
 -- Pitches are PICO-8 tracker notes (c0 is the lowest). Waves: 0 sine,
 -- 1 triangle, 2 saw, 3 square, 4 pulse, 5 organ, 6 noise, 7 phaser.
 -- Effects: 0 none, 1 slide, 2 vibrato, 3 drop, 4 fade in, 5 fade out.
--- Kept soft and low: mostly sine tones at volume 1-3 with fades, and stone sounds made of a dull noise tick
--- over a low falling triangle rather than bright blips.
+-- Kept soft and low: a footstep is barely there, crates scrape, water
+-- splashes, and the way out opening rings a little bell.
 local effects = {
-  -- a quiet sine lift, and the same falling back
-  { name = "pick up", speed = 2, notes = "a2:0:2:0 e3:0:3:0 e3:0:2:5" },
-  { name = "put down", speed = 2, notes = "e3:0:2:0 a2:0:2:0 a2:0:1:5" },
-  -- gravel under a rolling stone, played once per square
-  { name = "roll", speed = 5, notes = "c0:6:2:0 c0:6:1:0 c0:6:1:5" },
-  -- stone on stone: a dull tick and a low thump
-  { name = "stack", speed = 2, notes = "f3:6:2:5 c1:1:3:3 c1:1:1:5" },
-  -- a small bell on an open fifth, ringing out with a little vibrato
-  { name = "flag", speed = 6, notes = "a3:0:3:0 e4:0:2:0 e4:0:2:2 e4:0:1:5" },
-  -- a muted thud when a piece can't go that way
-  { name = "bump", speed = 5, notes = "a0:1:3:3 a0:1:1:5" },
+  -- a soft low footstep
+  { name = "step", speed = 2, notes = "d1:1:1:5" },
+  -- a crate or rock scraping over sandstone
+  { name = "push", speed = 3, notes = "c0:6:2:0 c0:6:2:0 c0:6:1:5" },
+  -- a crate landing in water
+  { name = "splash", speed = 3, notes = "c3:6:3:0 a2:6:2:3 f2:6:1:5" },
+  -- a rock sinking: a low plop and bubbles
+  { name = "sink", speed = 3, notes = "e2:0:3:3 c1:0:3:3 c1:6:1:5" },
+  -- a switch clicking down or up, and the green walls flipping
+  { name = "switch", speed = 2, notes = "c3:1:2:0 g2:1:2:3 g2:1:1:5" },
+  -- the way out opens: a small bell on an open fifth
+  { name = "door", speed = 6, notes = "g3:0:3:0 d4:0:2:0 d4:0:2:2 d4:0:1:5" },
   -- a soft downward glide
   { name = "undo", speed = 3, notes = "e3:0:2:0 b2:0:2:1 b2:0:1:5" },
   -- a slow, quiet G major 9 arpeggio, in the key of the song
   { name = "solved", speed = 10,
     notes = "g2:0:3:0 d3:0:3:0 a3:0:3:0 b3:0:3:0 f#4:0:2:0 f#4:0:2:2 f#4:0:1:2 f#4:0:1:5" },
+  -- a muted thud when he can't go that way
+  { name = "bump", speed = 5, notes = "a0:1:3:3 a0:1:1:5" },
+  -- a quiet sine lift: playing the other one
+  { name = "swap", speed = 2, notes = "a2:0:2:0 e3:0:3:0 e3:0:2:5" },
 }
 
 -------------------------------------------------------------------------------
--- music, sfx 8+
+-- music, sfx 10+
 -------------------------------------------------------------------------------
 local songs = {
   {
