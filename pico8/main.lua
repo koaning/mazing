@@ -14,7 +14,8 @@
 --   32 goal, 33 crate, 34 crate on a goal, 35 rock, 36 sunken rock,
 --   37/38 switch (pressed), 39/40 green wall shut/open, 41/42 door
 --   frame (across/side), 43/44 shut, 45/46 open, 47 way in
---   48-54 you: front, stepping, back, stepping, side, stepping, pushing.
+--   48-55 you: front, stepping, back, stepping, side, stepping,
+--         pushing, pushing step.
 --         partner is you in other colours (pal 13->4, 12->14)
 
 -- sfx (see tools/music.lua):
@@ -582,7 +583,7 @@ local function draw_title()
   -- a crate pushed along a strip of floor
   rectfill(0, 32, 127, 39, 15)
   local x = frame / 2 % 168 - 24
-  spr(54, x, 32)
+  spr(54 + flr(frame / 8) % 2, x, 32)
   spr(33, x + 8, 32)
   cprint("push crates, walk out", 42, 15)
 
