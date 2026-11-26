@@ -1,0 +1,5 @@
+dist/
+.DS_Store
+site/lovejs/*
+!site/lovejs/README.md
+conductor.json
