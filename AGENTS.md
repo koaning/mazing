@@ -1,6 +1,6 @@
 # Agent notes
 
-This repo holds **Sokoban**, a PICO-8 crate-pushing puzzle (`pico8/sokoban.p8`
+This repo holds **Mazing**, a PICO-8 crate-pushing puzzle (`pico8/mazing.p8`
 and `#include`d `.lua` files), ported from koaning/sokoban (a browser game
 with a level editor).
 

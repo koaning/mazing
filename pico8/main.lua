@@ -25,7 +25,7 @@
 -- saved progress:
 -- dget(0) highest level solved, dget(i) 1 once level i is solved,
 -- dget(63) the level played last
-cartdata("koaning_sokoban")
+cartdata("koaning_mazing")
 
 -- the screen palette: sandstone, with a few of pico-8's extra colours
 pal({ [0] = 133, 134, 2, 3, 132, 5, 6, 7, 136, 9, 135, 139, 12, 140, 142, 15 }, 1)

@@ -1,4 +1,4 @@
-# Sokoban
+# Mazing
 
 A crate-pushing puzzle for **PICO-8** (128×128, 16 colours): push every crate
 onto a goal, then walk out through the way out. It's a port of

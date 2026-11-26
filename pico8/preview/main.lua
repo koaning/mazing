@@ -3,7 +3,7 @@
 -- This is NOT PICO-8. It is a small stand-in that implements just enough of
 -- the PICO-8 API (128x128 screen, 16-colour palette plus the 16 extra
 -- screen colours, shapes, sprites, a 3x5 font, buttons, coroutines, a tiny
--- sfx/music synth) to play pico8/sokoban.p8 in a
+-- sfx/music synth) to play pico8/mazing.p8 in a
 -- browser through love.js when the real PICO-8 isn't available to export an
 -- HTML player. For the real thing: `make pico8` / PICO-8's own `export`.
 --
@@ -11,10 +11,10 @@
 -- VM instructions with a debug hook so stat(1) behaves roughly like the real
 -- console, which makes the bot "think" for a PICO-8-like number of frames.
 --
--- The cart is loaded from cart/sokoban.p8 inside this .love; its #include
+-- The cart is loaded from cart/mazing.p8 inside this .love; its #include
 -- lines are resolved against cart/ (the build copies pico8/*.lua there).
 --
--- `love sokoban-p8.love --shots <dir> [--label <file>] [--all]` plays the
+-- `love mazing-p8.love --shots <dir> [--label <file>] [--all]` plays the
 -- scripted run in shots.lua and saves screenshots into <dir>, and the title
 -- screen as cart label text into <file> (`make screenshots`).
 
@@ -765,7 +765,7 @@ function love.load(args)
   for i = 0, W * W - 1 do fb[i] = 0 end
   start_time = love.timer.getTime()
 
-  local lua, sfx_lines, music_lines, gfx_lines = read_cart("cart/sokoban.p8")
+  local lua, sfx_lines, music_lines, gfx_lines = read_cart("cart/mazing.p8")
   for i = 0, W * W - 1 do sheet[i] = 0 end
   for y, l in ipairs(gfx_lines) do
     for x = 1, math.min(#l, W) do sheet[(y - 1) * W + x - 1] = tonumber(l:sub(x, x), 16) or 0 end

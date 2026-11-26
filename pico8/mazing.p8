@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
--- sokoban
+-- mazing
 -- by koaning - push crates, walk out
 #include levels.lua
 #include rules.lua
