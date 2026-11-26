@@ -1,7 +1,7 @@
--- Cairns sound: readable scores compiled into the cart's __sfx__ and
+-- Mazing sound: readable scores compiled into the cart's __sfx__ and
 -- __music__ sections.
 --
---   luajit tools/music.lua              rewrite pico8/cairns.p8
+--   luajit tools/music.lua              rewrite pico8/mazing.p8
 --   luajit tools/music.lua --check      fail if the cart is out of date
 --
 -- sfx 0-7 are the sound effects (the `effects` table below), sfx 8+ the
@@ -11,7 +11,7 @@
 -- No lead melody: a soft plucked sine harp arpeggio on channel 0 and a
 -- root/fifth triangle bass on channel 1. Channels 2-3 stay free for sfx.
 
-local CART = "pico8/cairns.p8"
+local CART = "pico8/mazing.p8"
 local FIRST_SFX = 8
 
 local HARP = { wave = 0, vol = 3 }
@@ -237,7 +237,7 @@ local new = updated_cart(src, sfx, music)
 
 if arg[1] == "--check" then
   if new ~= src then
-    io.stderr:write("pico8/cairns.p8 sound is stale: run `make music`\n")
+    io.stderr:write("pico8/mazing.p8 sound is stale: run `make music`\n")
     os.exit(1)
   end
   local main = read("pico8/main.lua")

@@ -1,7 +1,7 @@
 name: Pages
 
 # Builds dist/site (the cart on the browser preview player) and publishes it
-# to GitHub Pages at https://koaning.github.io/cairns/ (Settings → Pages →
+# to GitHub Pages at https://koaning.github.io/mazing/ (Settings → Pages →
 # Source: GitHub Actions).
 
 on:

@@ -1,6 +1,6 @@
 # Agent notes
 
-This repo holds **Cairns**, a PICO-8 stone-stacking puzzle (`pico8/cairns.p8`
+This repo holds **Mazing**, a PICO-8 stone-stacking puzzle (`pico8/mazing.p8`
 and `#include`d `.lua` files), ported from snowstack in koaning/ps-love2d.
 
 - Always finish with `make test` from the repo root. It runs the rule tests

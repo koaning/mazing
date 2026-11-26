@@ -1,14 +1,14 @@
-# Cairns — PICO-8 cart
+# Mazing — PICO-8 cart
 
 | Cartridge | Gameplay |
 | --- | --- |
 | ![PICO-8 cartridge](../docs/screenshots/pico8-cart.png) | ![PICO-8 gameplay](../docs/screenshots/pico8.png) |
 
 ```bash
-pico8 -run cairns.p8     # or `make pico8` from the repo root
+pico8 -run mazing.p8     # or `make pico8` from the repo root
 ```
 
-The cart is `cairns.p8`, which `#include`s:
+The cart is `mazing.p8`, which `#include`s:
 
 | File | What |
 | --- | --- |
@@ -67,7 +67,7 @@ them sorted by fewest moves. Pick, name, and slot them in by difficulty.
 
 ## Saved progress
 
-`cartdata("koaning_cairns")`: `dget(0)` is the highest level solved,
+`cartdata("koaning_mazing")`: `dget(0)` is the highest level solved,
 `dget(1..30)` your fewest moves on each level, `dget(63)` the level played
 last (the title opens on it).
 
@@ -96,14 +96,14 @@ because `make music` would overwrite those edits.
 ## Preview player (no PICO-8 needed)
 
 `preview/` is a small PICO-8 stand-in written in LÖVE. It reads
-`cairns.p8`, resolves its `#include`s and runs the cart against a minimal
+`mazing.p8`, resolves its `#include`s and runs the cart against a minimal
 PICO-8 API: 128×128 framebuffer, the 16-colour palette, shapes, fill
 patterns, a 3×5 font, buttons, coroutines, `cartdata` saved in LÖVE's save
 folder, and a tiny synth (`preview/synth.lua`) for the `__sfx__` and
 `__music__` sections.
 
 ```bash
-make pico8-preview && love dist/cairns-p8.love   # desktop
+make pico8-preview && love dist/mazing-p8.love   # desktop
 make serve                                       # browser
 make screenshots                                 # scripted run, see preview/shots.lua
 ```

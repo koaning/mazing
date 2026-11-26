@@ -2,7 +2,7 @@
 --
 -- This is NOT PICO-8. It is a small stand-in that implements just enough of
 -- the PICO-8 API (128x128 screen, 16-colour palette, shapes, a 3x5 font,
--- buttons, coroutines, a tiny sfx/music synth) to play pico8/cairns.p8 in a
+-- buttons, coroutines, a tiny sfx/music synth) to play pico8/mazing.p8 in a
 -- browser through love.js when the real PICO-8 isn't available to export an
 -- HTML player. For the real thing: `make pico8` / PICO-8's own `export`.
 --
@@ -10,10 +10,10 @@
 -- VM instructions with a debug hook so stat(1) behaves roughly like the real
 -- console, which makes the bot "think" for a PICO-8-like number of frames.
 --
--- The cart is loaded from cart/cairns.p8 inside this .love; its #include
+-- The cart is loaded from cart/mazing.p8 inside this .love; its #include
 -- lines are resolved against cart/ (the build copies pico8/*.lua there).
 --
--- `love cairns-p8.love --shots <dir> [--label <file>] [--all]` plays the
+-- `love mazing-p8.love --shots <dir> [--label <file>] [--all]` plays the
 -- scripted run in shots.lua and saves screenshots into <dir>, and the title
 -- screen as cart label text into <file> (`make screenshots`).
 
@@ -684,7 +684,7 @@ function love.load(args)
   for i = 0, W * W - 1 do fb[i] = 0 end
   start_time = love.timer.getTime()
 
-  local lua, sfx_lines, music_lines = read_cart("cart/cairns.p8")
+  local lua, sfx_lines, music_lines = read_cart("cart/mazing.p8")
   cart_title, cart_byline = lua:match("^%-%- ([^\n]*)\n%-%- ([^\n]*)")
   cart_title, cart_byline = cart_title or "", cart_byline or ""
   for i, hex in ipairs(sfx_lines) do
