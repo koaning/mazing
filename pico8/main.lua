@@ -18,7 +18,7 @@
 --         pushing, pushing step.
 --         partner is you in other colours (pal 13->4, 12->14)
 
--- sfx (see tools/music.lua):
+-- sfx (see tools/scores.lua):
 -- 0 step, 1 push, 2 splash, 3 sink, 4 switch, 5 door opens, 6 undo,
 -- 7 solved, 8 bump, 9 swap. one song plays all the time, from
 -- pattern 0, on channels 0-1 (mask 3) so sfx keep 2-3.

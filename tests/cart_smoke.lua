@@ -6,66 +6,20 @@
 --
 -- Run from the repo root:  luajit tests/cart_smoke.lua
 
-package.path = "tools/?.lua;" .. package.path
-local pico8_env = require("pico8_env")
+package.path = "tests/?.lua;tools/?.lua;" .. package.path
+local stub = require("pico8_stub")
 local solve = require("solve")
 
-local LEFT, RIGHT, UP, DOWN, O, X, PAUSE = 0, 1, 2, 3, 4, 5, 6
-local ENTER = 40
-
-local function noop() end
+local LEFT, RIGHT, UP, DOWN, O, X, PAUSE =
+  stub.LEFT, stub.RIGHT, stub.UP, stub.DOWN, stub.O, stub.X, stub.PAUSE
+local ENTER = stub.ENTER
 
 local function boot(saved)
-  local env = pico8_env.new(".", pico8_env.make_rng(7))
-  local pressed, holding = {}, {}
-  local data = saved or {}
-
-  for _, name in ipairs({ "cls", "rectfill", "rect", "circfill", "circ", "line", "print", "sfx", "music",
-    "ovalfill", "pset", "fillp", "clip", "pal", "palt", "spr", "sspr", "cartdata", "menuitem", "poke" }) do
-    rawset(env, name, noop)
-  end
-  rawset(env, "dget", function(i) return data[i] or 0 end)
-  rawset(env, "dset", function(i, v) data[i] = v end)
-  rawset(env, "del", function(t, v)
-    for i = 1, #t do
-      if t[i] == v then return table.remove(t, i) end
-    end
-  end)
-  rawset(env, "ord", function(s, i) return string.byte(s, i or 1) end)
-  rawset(env, "mid", function(a, b, c)
-    if a > b then a, b = b, a end
-    return math.max(a, math.min(b, c))
-  end)
-  rawset(env, "btnp", function(b) return pressed[b] == true end)
-  rawset(env, "btn", function(b) return pressed[b] == true or holding[b] == true end)
-  rawset(env, "sin", function(a) return -math.sin(a * 2 * math.pi) end)
-  rawset(env, "cos", function(a) return math.cos(a * 2 * math.pi) end)
-  -- devkit keyboard: stat(28, 40) is the enter key
-  local keys = {}
-  rawset(env, "stat", function(n, k) return n == 28 and keys[k] == true end)
-  rawset(env, "stop", function(msg) error("cart stop(): " .. tostring(msg)) end)
-
-  local src = assert(io.open("pico8/main.lua")):read("*a")
-  src = src .. "\nfunction __peek() return { scene = scene, lv = lv, st = st, who = who, anim = anim,"
-    .. " intro = intro, outro = outro, won = won, menu = menu, lvl = lvl, moves = #hist } end\n"
-  local chunk = assert(loadstring(src, "@pico8/main.lua"))
-  setfenv(chunk, env)
-  chunk()
-
-  local game = { env = env, data = data }
-
-  function game.frame(buttons, hold, scancodes)
-    pressed, holding, keys = {}, {}, {}
-    for _, k in ipairs(scancodes or {}) do keys[k] = true end
-    for _, b in ipairs(buttons or {}) do pressed[b] = true end
-    for _, b in ipairs(hold or {}) do holding[b] = true end
-    env._update60()
-    env._draw()
-  end
-
-  function game.peek()
-    return env.__peek()
-  end
+  local game = stub.boot({
+    seed = 7,
+    save = saved,
+    peek = { "scene", "lv", "st", "who", "anim", "intro", "outro", "won", "menu", "lvl", "moves = #hist" },
+  })
 
   -- runs frames until the cart is waiting for input again
   function game.settle()

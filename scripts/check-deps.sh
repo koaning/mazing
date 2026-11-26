@@ -14,7 +14,7 @@ check() {
   fi
 }
 
-echo "Checking Mazing requirements:"
+echo "Checking requirements:"
 check luajit "make test"
 check zip "make pico8-preview / site"
 check curl "make fetch-lovejs"
