@@ -73,6 +73,29 @@ local game = boot()
 local env = game.env
 assert(game.peek().scene == "title", "the cart should boot into the title")
 
+-- the title has a pause menu too: resume closes it, quit game shuts down
+local shut = {}
+rawset(env, "extcmd", function(cmd) shut[#shut + 1] = cmd end)
+game.frame({ PAUSE }, { PAUSE })
+assert(game.peek().menu, "the pause button should open the title menu")
+game.frame()
+game.frame({ O })
+assert(not game.peek().menu and game.peek().scene == "title", "resume should close the title menu")
+game.frame({ X })
+assert(game.peek().menu, "X should open the title menu")
+game.frame()
+game.frame({ X })
+assert(not game.peek().menu and #shut == 0, "X should close the title menu")
+game.frame()
+game.frame({ PAUSE }, { PAUSE })
+game.frame()
+game.frame({ DOWN })
+game.frame({ O })
+assert(shut[1] == "shutdown", "quit game should call extcmd(\"shutdown\")")
+game.frame()
+assert(shut[2] == "pause", "still running after shutdown: open pico-8's pause menu")
+assert(game.peek().scene == "title")
+
 -- three levels are open on a fresh save, level 4 is locked
 game.frame({ RIGHT })
 game.frame({ RIGHT })

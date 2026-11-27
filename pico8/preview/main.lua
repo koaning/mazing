@@ -502,6 +502,10 @@ local function make_env()
     cartdata = cartdata, dget = dget, dset = dset,
     -- PICO-8's pause menu isn't emulated; carts should offer their own way in
     menuitem = function() end,
+    -- extcmd("shutdown") quits like an exported binary (not in a browser)
+    extcmd = function(cmd)
+      if cmd == "shutdown" and love.system.getOS() ~= "Web" then love.event.quit() end
+    end,
     -- memory isn't emulated: draw-state and devkit pokes are no-ops
     poke = function() end, peek = function() return 0 end,
     printh = function(...) print(...) end,
