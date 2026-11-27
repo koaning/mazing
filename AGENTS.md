@@ -36,6 +36,12 @@ files, `pico8/preview/shots.lua`, `tests/test_*.lua`, `tests/cart_smoke.lua`,
   `pico8/preview/` (a minimal PICO-8 stand-in player written in LÖVE). If the
   cart uses a PICO-8 API the preview player or the stub doesn't implement
   yet, add it there (in the template, so every game gets it).
+- Players must always be able to quit, on handhelds especially. If the cart
+  takes over the pause button (`poke(0x5f30, 1)`), PICO-8's own pause menu
+  and its exit option are out of reach, so the title needs its own menu with
+  a "quit game" row: call `extcmd("shutdown")` (quits exported binaries and
+  the preview player), and if the cart is still running the next frame, call
+  `extcmd("pause")` to open PICO-8's menu instead.
 - `make screenshots` (needs LÖVE; without a display use
   `make screenshots LOVE="xvfb-run -a love"`) replays `pico8/preview/shots.lua`
   and refreshes `docs/screenshots/` and the cart label. Rerun it after visual

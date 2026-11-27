@@ -30,7 +30,7 @@ local NOOPS = {
   "cls", "rectfill", "rect", "circfill", "circ", "line", "print", "sfx", "music",
   "ovalfill", "oval", "pset", "fillp", "clip", "pal", "palt", "spr", "sspr", "map",
   "camera", "color", "cursor", "cartdata", "menuitem", "poke", "poke2", "poke4",
-  "memcpy", "memset", "printh", "srand", "flip", "sset", "mset",
+  "memcpy", "memset", "printh", "srand", "flip", "sset", "mset", "extcmd",
 }
 
 local function peek_source(names)

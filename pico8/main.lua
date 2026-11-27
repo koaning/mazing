@@ -34,7 +34,9 @@ pal({ [0] = 133, 134, 2, 3, 132, 5, 6, 7, 136, 9, 135, 139, 12, 140, 142, 15 }, 
 -- which wall piece a quarter takes, for none / beside / along / inner
 -- corner / full, one string per quarter (top left, right, bottom l, r)
 local wall_q = { "12467", "32457", "52437", "62417" }
-local menu_items = { "resume", "restart", "back to levels" }
+-- the pause menu: in a level, and on the title (where it can quit)
+local play_items = { "resume", "restart", "back to levels" }
+local title_items = { "resume", "quit game" }
 
 -- logo letters, 8 rows each, drawn 2x as carved sandstone
 local logo = {
@@ -78,6 +80,7 @@ local lv, st, hist = nil, nil, {}
 local who, face, pushed = 1, {}, {}
 local ox, oy = 0, 0
 local anim, won, menu, intro, outro, bump = nil
+local quitting = nil
 -- a direction pressed while something moved, and how long one is held
 local queued, holdf = nil, {}
 local xhold, frame = 0, 0
@@ -225,7 +228,45 @@ end
 -- update
 -------------------------------------------------------------
 
+local function update_menu()
+  local items = menu.items
+  if btnp(2) then menu.row = (menu.row - 2) % #items + 1 end
+  if btnp(3) then menu.row = menu.row % #items + 1 end
+  if btnp(5) or pause then
+    menu = nil
+    return
+  end
+  if ok() then
+    local r = menu.row
+    menu = nil
+    if items == title_items then
+      if r == 2 then
+        -- quits an exported binary; if we're still here next frame,
+        -- open pico-8's own pause menu, which has its exit options
+        extcmd("shutdown")
+        quitting = true
+      end
+    else
+      if r == 2 then restart() end
+      if r == 3 then to_title() end
+    end
+  end
+end
+
 local function update_title()
+  if quitting then
+    quitting = nil
+    extcmd("pause")
+  end
+  if menu then
+    update_menu()
+    return
+  end
+  if pause or btnp(5) then
+    menu = { row = 1, items = title_items }
+    sfx(0)
+    return
+  end
   local d = 0
   if btnp(0) then d = -1 end
   if btnp(1) then d = 1 end
@@ -244,21 +285,6 @@ local function update_title()
     else
       sfx(8)
     end
-  end
-end
-
-local function update_menu()
-  if btnp(2) then menu.row = (menu.row - 2) % #menu_items + 1 end
-  if btnp(3) then menu.row = menu.row % #menu_items + 1 end
-  if btnp(5) or pause then
-    menu = nil
-    return
-  end
-  if ok() then
-    local r = menu.row
-    menu = nil
-    if r == 2 then restart() end
-    if r == 3 then to_title() end
   end
 end
 
@@ -293,7 +319,7 @@ local function update_play()
     return
   end
   if pause then
-    menu = { row = 1 }
+    menu = { row = 1, items = play_items }
     sfx(0)
     return
   end
@@ -525,6 +551,17 @@ local function draw_hud()
   cprint(hint, 121, 15)
 end
 
+local function draw_menu()
+  if not menu then return end
+  panel(26, 44, 101, 51 + #menu.items * 9)
+  for i = 1, #menu.items do
+    local y = 41 + i * 9
+    local on = i == menu.row
+    if on then print("\145", 30, y, 9) end
+    print(menu.items[i], 40, y, on and 7 or 1)
+  end
+end
+
 local function draw_play()
   cls(0)
   local r = intro and intro * 4 or outro and (20 - outro) * 4
@@ -537,15 +574,7 @@ local function draw_play()
   clip()
   draw_hud()
 
-  if menu then
-    panel(26, 44, 101, 78)
-    for i = 1, #menu_items do
-      local y = 41 + i * 9
-      local on = i == menu.row
-      if on then print("\145", 30, y, 9) end
-      print(menu_items[i], 40, y, on and 7 or 1)
-    end
-  end
+  draw_menu()
 end
 
 -- the logo's pixels: { x, y, top edge, bottom edge }, 2x2 each
@@ -610,10 +639,12 @@ local function draw_title()
   rectfill(0, 107, 127, 127, 4)
   if lvl <= n then
     cprint(levels[lvl][1], 111, 7)
-    cprint("\142 play", 119, 10)
+    cprint("\142 play", 120, 10)
   else
-    cprint("solve " .. (lvl - n) .. " more to open", 115, 15)
+    cprint("solve " .. (lvl - n) .. " more to open", 111, 15)
   end
+  print("p menu", 103, 121, 15)
+  draw_menu()
 end
 
 function _draw()
